@@ -18,18 +18,18 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 	defer p7ctrl.Finish()
 
 	s5s6case := []struct {
-		name       string
-		mock       func() redis.Cmdable
-		key        string
-		expiration time.Duration
-		i9retry    I9LockRetry
-		timeout    time.Duration
-		wantLock   *S6Lock
-		wantErr    string
+		name        string
+		i9redisMock func() redis.Cmdable
+		key         string
+		expiration  time.Duration
+		i9retry     I9LockRetry
+		timeout     time.Duration
+		wantLock    *S6Lock
+		wantErr     string
 	}{
 		{
 			name: "lock",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetVal("OK")
@@ -47,7 +47,7 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_fail",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetErr(errors.New("redis error"))
@@ -62,13 +62,14 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_with_retry",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetErr(context.DeadlineExceeded)
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaLock, []string{"key1"}, gomock.Any()).Times(2).Return(p7cmd)
+
 				p7cmd2 := redis.NewCmd(context.Background(), nil)
 				p7cmd2.SetVal("OK")
-				p7cmdable.EXPECT().Eval(gomock.Any(), luaLock, []string{"key1"}, gomock.Any()).Times(2).Return(p7cmd)
 				p7cmdable.EXPECT().Eval(gomock.Any(), luaLock, []string{"key1"}, gomock.Any()).Return(p7cmd2)
 				return p7cmdable
 			},
@@ -83,7 +84,7 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_with_retry_fail_overtime",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetErr(context.DeadlineExceeded)
@@ -98,7 +99,7 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_with_retry_fail_lock_hold_by_others",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmdable.EXPECT().Eval(gomock.Any(), luaLock, []string{"key1"}, gomock.Any()).Times(3).Return(p7cmd)
@@ -112,7 +113,7 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_with_retry_fail_timeout",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				// 这里测试的时候，注意控制调用次数，调用次数不够它会报错
@@ -129,7 +130,7 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 
 	for _, t4value := range s5s6case {
 		p7s6t.Run(t4value.name, func(p7s6t *testing.T) {
-			mockRedisCmd := t4value.mock()
+			mockRedisCmd := t4value.i9redisMock()
 			p7RedisLock := F8NewS6RedisLock(mockRedisCmd)
 			ctx, cancel := context.WithTimeout(context.Background(), t4value.timeout)
 			defer cancel()
@@ -151,19 +152,19 @@ func TestS6RedisLockF8Lock(p7s6t *testing.T) {
 	}
 }
 
-func TestS6RedisLockF8Unlock(p7s6t *testing.T) {
+func TestS6LockF8Unlock(p7s6t *testing.T) {
 	p7s6t.Parallel()
 	p7ctrl := gomock.NewController(p7s6t)
 	defer p7ctrl.Finish()
 
 	s5s6case := []struct {
-		name    string
-		mock    func() redis.Cmdable
-		wantErr error
+		name        string
+		i9redisMock func() redis.Cmdable
+		wantErr     error
 	}{
 		{
 			name: "unlock",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetVal(int64(1))
@@ -173,7 +174,7 @@ func TestS6RedisLockF8Unlock(p7s6t *testing.T) {
 		},
 		{
 			name: "unlock_fail",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetErr(errors.New("redis error"))
@@ -184,7 +185,7 @@ func TestS6RedisLockF8Unlock(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_not_hold",
-			mock: func() redis.Cmdable {
+			i9redisMock: func() redis.Cmdable {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetVal(int64(0))
@@ -197,26 +198,26 @@ func TestS6RedisLockF8Unlock(p7s6t *testing.T) {
 
 	for _, t4value := range s5s6case {
 		p7s6t.Run(t4value.name, func(p7s6t *testing.T) {
-			p7s6lock := f8NewS6Lock(t4value.mock(), "temp-value", "key1", time.Minute)
+			p7s6lock := f8NewS6Lock(t4value.i9redisMock(), "temp-value", "key1", time.Minute)
 			err := p7s6lock.F8Unlock(context.Background())
 			assert.Equal(p7s6t, t4value.wantErr, err)
 		})
 	}
 }
 
-func TestS6RedisLockF8Refresh(p7s6t *testing.T) {
+func TestS6LockF8Refresh(p7s6t *testing.T) {
 	p7s6t.Parallel()
 	p7ctrl := gomock.NewController(p7s6t)
 	defer p7ctrl.Finish()
 
 	s5s6case := []struct {
-		name    string
-		mock    func() *S6Lock
-		wantErr error
+		name       string
+		s6lockMock func() *S6Lock
+		wantErr    error
 	}{
 		{
 			name: "refresh",
-			mock: func() *S6Lock {
+			s6lockMock: func() *S6Lock {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetVal(int64(1))
@@ -231,7 +232,7 @@ func TestS6RedisLockF8Refresh(p7s6t *testing.T) {
 		},
 		{
 			name: "refresh_fail",
-			mock: func() *S6Lock {
+			s6lockMock: func() *S6Lock {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetErr(redis.Nil)
@@ -247,7 +248,7 @@ func TestS6RedisLockF8Refresh(p7s6t *testing.T) {
 		},
 		{
 			name: "lock_not_hold",
-			mock: func() *S6Lock {
+			s6lockMock: func() *S6Lock {
 				p7cmdable := mock.NewMockCmdable(p7ctrl)
 				p7cmd := redis.NewCmd(context.Background(), nil)
 				p7cmd.SetVal(int64(0))
@@ -265,7 +266,112 @@ func TestS6RedisLockF8Refresh(p7s6t *testing.T) {
 
 	for _, t4value := range s5s6case {
 		p7s6t.Run(t4value.name, func(p7s6t *testing.T) {
-			err := t4value.mock().F8Refresh(context.Background())
+			err := t4value.s6lockMock().F8Refresh(context.Background())
+			assert.Equal(p7s6t, t4value.wantErr, err)
+		})
+	}
+}
+
+func TestS6LockF8AutoRefresh(p7s6t *testing.T) {
+	p7s6t.Parallel()
+	p7ctrl := gomock.NewController(p7s6t)
+	defer p7ctrl.Finish()
+
+	s5s6case := []struct {
+		name        string
+		s6lockMock  func() *S6Lock
+		unlockAfter time.Duration
+		interval    time.Duration
+		timeout     time.Duration
+		wantErr     error
+	}{
+		{
+			name: "auto_refresh",
+			s6lockMock: func() *S6Lock {
+				p7cmdable := mock.NewMockCmdable(p7ctrl)
+				p7cmd := redis.NewCmd(context.Background(), nil)
+				p7cmd.SetVal(int64(1))
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaRefresh, []string{"key1"}, gomock.Any()).AnyTimes().Return(p7cmd)
+
+				p7cmd2 := redis.NewCmd(context.Background())
+				p7cmd2.SetVal(int64(1))
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaUnlock, gomock.Any(), gomock.Any()).Return(p7cmd2)
+				return &S6Lock{
+					i9RedisClient:  p7cmdable,
+					selfTag:        "temp-value",
+					key:            "key1",
+					expiration:     time.Minute,
+					c4UnlockSignal: make(chan struct{}, 1),
+				}
+			},
+			unlockAfter: time.Second,
+			interval:    200 * time.Millisecond,
+			timeout:     200 * time.Millisecond,
+			wantErr:     nil,
+		},
+		{
+			name: "auto_refresh_fail",
+			s6lockMock: func() *S6Lock {
+				p7cmdable := mock.NewMockCmdable(p7ctrl)
+				p7cmd := redis.NewCmd(context.Background(), nil)
+				p7cmd.SetErr(errors.New("redis error"))
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaRefresh, []string{"key1"}, gomock.Any()).AnyTimes().Return(p7cmd)
+
+				//p7cmd2 := redis.NewCmd(context.Background())
+				//p7cmd2.SetVal(int64(1))
+				//p7cmdable.EXPECT().Eval(gomock.Any(), luaUnlock, gomock.Any(), gomock.Any()).Return(p7cmd2)
+				return &S6Lock{
+					i9RedisClient:  p7cmdable,
+					selfTag:        "temp-value",
+					key:            "key1",
+					expiration:     time.Minute,
+					c4UnlockSignal: make(chan struct{}, 1),
+				}
+			},
+			unlockAfter: time.Second,
+			interval:    200 * time.Millisecond,
+			timeout:     200 * time.Millisecond,
+			wantErr:     errors.New("redis error"),
+		},
+		{
+			name: "auto_refresh_timeout",
+			s6lockMock: func() *S6Lock {
+				p7cmdable := mock.NewMockCmdable(p7ctrl)
+				p7cmd := redis.NewCmd(context.Background(), nil)
+				p7cmd.SetErr(context.DeadlineExceeded)
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaRefresh, []string{"key1"}, gomock.Any()).Times(2).Return(p7cmd)
+
+				p7cmd2 := redis.NewCmd(context.Background(), nil)
+				p7cmd2.SetVal(int64(1))
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaRefresh, []string{"key1"}, gomock.Any()).AnyTimes().Return(p7cmd2)
+
+				p7cmd4 := redis.NewCmd(context.Background())
+				p7cmd4.SetVal(int64(1))
+				p7cmdable.EXPECT().Eval(gomock.Any(), luaUnlock, gomock.Any(), gomock.Any()).Return(p7cmd4)
+				return &S6Lock{
+					i9RedisClient:  p7cmdable,
+					selfTag:        "temp-value",
+					key:            "key1",
+					expiration:     time.Minute,
+					c4UnlockSignal: make(chan struct{}, 1),
+				}
+			},
+			unlockAfter: time.Second,
+			interval:    200 * time.Millisecond,
+			timeout:     200 * time.Millisecond,
+			wantErr:     nil,
+		},
+	}
+
+	for _, t4value := range s5s6case {
+		p7s6t.Run(t4value.name, func(p7s6t *testing.T) {
+			p7s6lock := t4value.s6lockMock()
+			go func() {
+				time.Sleep(t4value.unlockAfter)
+				err := p7s6lock.F8Unlock(context.Background())
+				assert.NoError(p7s6t, err)
+			}()
+			err := p7s6lock.F8AutoRefresh(t4value.interval, t4value.timeout)
 			assert.Equal(p7s6t, t4value.wantErr, err)
 		})
 	}

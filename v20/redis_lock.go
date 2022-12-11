@@ -85,6 +85,7 @@ func f8NewS6Lock(i9RedisClient redis.Cmdable, selfTag string, key string, expira
 // #### type func ####
 
 // 带重试次数的加锁
+// i9ctx 控制整体加锁的超时时间
 // key 锁的名字
 // expiration 锁的持有时间
 // timeout 每次加锁的超时时间
@@ -195,6 +196,65 @@ func (p7this *S6Lock) F8Refresh(i9ctx context.Context) error {
 		return ErrLockNotHold
 	}
 	return nil
+}
+
+// interval 自动刷新锁的时间的时间间隔，这个间隔可以短一点，需要给重试留时间
+// timeout 每次自动刷新的超时时间
+func (p7this *S6Lock) F8AutoRefresh(interval time.Duration, timeout time.Duration) error {
+	// 用于控制自动刷新的间隔
+	t4IntervalTicker := time.NewTicker(interval)
+	// 自动刷新超时时的重试信号
+	c4retry := make(chan struct{}, 1)
+	for {
+		select {
+		case <-t4IntervalTicker.C:
+			fmt.Println("F8AutoRefresh.t4IntervalTicker.C")
+			// 正常情况走这里
+			t4ctx, t4f8cancel := context.WithTimeout(context.Background(), timeout)
+			err := p7this.F8Refresh(t4ctx)
+			t4f8cancel()
+
+			if err == context.DeadlineExceeded {
+				// 超时可以重试
+				// 注意这里不能直接 c4retry <- struct{}{}。如果时间间隔和超时同时存在，
+				// 这个时候 select 走了时间间隔，但是又超时了，那就会在这里阻塞住，让重试先跑。
+				select {
+				case c4retry <- struct{}{}:
+				default:
+				}
+				continue
+			}
+			// 其他错误就不重试了
+			if nil != err {
+				return err
+			}
+		case <-c4retry:
+			fmt.Println("F8AutoRefresh.c4retry")
+			// 重试情况走这里
+			// 逻辑和正常情况是一样的，cv 过来都可以
+			t4ctx, t4f8cancel := context.WithTimeout(context.Background(), timeout)
+			err := p7this.F8Refresh(t4ctx)
+			t4f8cancel()
+
+			if err == context.DeadlineExceeded {
+				// 重试如果超时了，其实不管问题也不大
+				select {
+				// 这和上面那里是一样的，如果时间间隔和超时同时存在，
+				// 这个时候 select 走了重试间隔，但是又超时了，那就会在这里阻塞住，让时间间隔先跑。
+				case c4retry <- struct{}{}:
+				default:
+				}
+				continue
+			}
+			if nil != err {
+				return err
+			}
+		case <-p7this.c4UnlockSignal:
+			fmt.Println("F8AutoRefresh.c4UnlockSignal")
+			// 接到解锁信号，退出自动刷新
+			return nil
+		}
+	}
 }
 
 func (p7this *S6LockRetry) F8NextTry() (bool, time.Duration) {
