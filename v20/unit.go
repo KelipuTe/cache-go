@@ -2,20 +2,21 @@ package v20
 
 import "time"
 
-// 缓存单元
+// s6Unit 缓存单元
 type s6Unit struct {
-	// 值
+	// value 缓存的值
 	value any
-	// 过期时间
+	// deadline 过期时间
 	deadline time.Time
 }
 
+// f8CheckDeadline 缓存过期没有
 // true=没过期；false=过期
-func (p7this *s6Unit) f8CheckDeadline(t4time time.Time) bool {
+func (p7this *s6Unit) f8CheckDeadline(checkTime time.Time) bool {
 	if p7this.deadline.IsZero() {
-		// 如果没有设置过期时间
+		// 如果没有设置过期时间，那就不会过期
 		return true
 	}
-	// 否则比较一下过期时间和当前时间
-	return p7this.deadline.Before(t4time)
+	// 否则比较一下校验时间是不是在过期时间之前
+	return checkTime.Before(p7this.deadline)
 }

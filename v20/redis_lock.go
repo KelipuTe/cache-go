@@ -202,13 +202,13 @@ func (p7this *S6Lock) F8Refresh(i9ctx context.Context) error {
 // timeout 每次自动刷新的超时时间
 func (p7this *S6Lock) F8AutoRefresh(interval time.Duration, timeout time.Duration) error {
 	// 用于控制自动刷新的间隔
-	t4IntervalTicker := time.NewTicker(interval)
+	t4RefreshTicker := time.NewTicker(interval)
 	// 自动刷新超时时的重试信号
 	c4retry := make(chan struct{}, 1)
 	for {
 		select {
-		case <-t4IntervalTicker.C:
-			fmt.Println("F8AutoRefresh.t4IntervalTicker.C")
+		case <-t4RefreshTicker.C:
+			fmt.Println("F8AutoRefresh.t4RefreshTicker.C")
 			// 正常情况走这里
 			t4ctx, t4f8cancel := context.WithTimeout(context.Background(), timeout)
 			err := p7this.F8Refresh(t4ctx)

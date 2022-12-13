@@ -22,7 +22,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 			name: "key_not_exist",
 			cache: func() *S6CacheWithMemoryLimit {
 				return &S6CacheWithMemoryLimit{
-					i9Cache:   F8NewS6Local(),
+					i9Cache:   F8NewS6LocalForTest(),
 					NowMemory: 0,
 					MaxMemory: 16,
 					s5LRU:     make([]string, 0),

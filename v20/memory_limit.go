@@ -23,7 +23,7 @@ type S6CacheWithMemoryLimit struct {
 
 func F8NewS6CacheWithMemoryLimit() *S6CacheWithMemoryLimit {
 	return &S6CacheWithMemoryLimit{
-		i9Cache:   F8NewS6Local(),
+		i9Cache:   F8NewS6LocalForTest(),
 		NowMemory: 0,
 		MaxMemory: 0,
 		s5LRU:     make([]string, 0),
