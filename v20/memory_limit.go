@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-// S6CacheWithMemoryLimit 有最大内存限制的缓存
+// S6MemoryLimitCache 有最大内存限制的缓存
 // 装饰器模式，装饰 I9Cache（S6Local）
-type S6CacheWithMemoryLimit struct {
+type S6MemoryLimitCache struct {
 	// 缓存本体
 	i9Cache I9Cache
 	// 当前内存大小，单位 byte
@@ -22,8 +22,8 @@ type S6CacheWithMemoryLimit struct {
 	p7s6lock *sync.Mutex
 }
 
-func F8NewS6CacheWithMemoryLimitForTest(i9cache I9Cache, maxMemory int64) *S6CacheWithMemoryLimit {
-	return &S6CacheWithMemoryLimit{
+func F8NewS6CacheWithMemoryLimitForTest(i9cache I9Cache, maxMemory int64) *S6MemoryLimitCache {
+	return &S6MemoryLimitCache{
 		i9Cache:   i9cache,
 		NowMemory: 0,
 		MaxMemory: maxMemory,
@@ -33,7 +33,7 @@ func F8NewS6CacheWithMemoryLimitForTest(i9cache I9Cache, maxMemory int64) *S6Cac
 }
 
 // F8Set 这地方需要限制 value 的类型，要不然过来那种多级指针啥的，不怎么好算内存占用
-func (p7this *S6CacheWithMemoryLimit) F8Set(i9ctx context.Context, key string, value string, expiration time.Duration) error {
+func (p7this *S6MemoryLimitCache) F8Set(i9ctx context.Context, key string, value string, expiration time.Duration) error {
 	p7this.p7s6lock.Lock()
 	defer p7this.p7s6lock.Unlock()
 
@@ -79,7 +79,7 @@ func (p7this *S6CacheWithMemoryLimit) F8Set(i9ctx context.Context, key string, v
 	return nil
 }
 
-func (p7this *S6CacheWithMemoryLimit) F8Delete(i9ctx context.Context, key string) error {
+func (p7this *S6MemoryLimitCache) F8Delete(i9ctx context.Context, key string) error {
 	p7this.p7s6lock.Lock()
 	defer p7this.p7s6lock.Unlock()
 
@@ -99,11 +99,11 @@ func (p7this *S6CacheWithMemoryLimit) F8Delete(i9ctx context.Context, key string
 	return nil
 }
 
-func (p7this *S6CacheWithMemoryLimit) f8AddToLRU(key string) {
+func (p7this *S6MemoryLimitCache) f8AddToLRU(key string) {
 	p7this.s5LRU = append(p7this.s5LRU, key)
 }
 
-func (p7this *S6CacheWithMemoryLimit) f8DeleteFromLRU(key string) {
+func (p7this *S6MemoryLimitCache) f8DeleteFromLRU(key string) {
 	deleteIndex := -1
 	for t4index, t4value := range p7this.s5LRU {
 		if key == t4value {

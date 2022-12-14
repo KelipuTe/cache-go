@@ -3,6 +3,8 @@ package v20
 import "time"
 
 // s6Unit 缓存单元
+// 这玩意本地缓存可以直接存在内存里没问题
+// 但是如果是 redis 这种实现，那就需要考虑序列化
 type s6Unit struct {
 	// value 缓存的值
 	value any

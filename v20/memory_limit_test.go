@@ -10,7 +10,7 @@ import (
 func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 	s5s6case := []struct {
 		name          string
-		f8GetCache    func() *S6CacheWithMemoryLimit
+		f8GetCache    func() *S6MemoryLimitCache
 		key           string
 		value         string
 		wantNowMemory int64
@@ -19,7 +19,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 	}{
 		{
 			name: "key_not_exist",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				p7s6cache := F8NewS6CacheWithMemoryLimitForTest(i9cache, 16)
 				return p7s6cache
@@ -32,7 +32,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 		},
 		{
 			name: "key_exist",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				p7s6cache := F8NewS6CacheWithMemoryLimitForTest(i9cache, 16)
@@ -48,7 +48,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 		},
 		{
 			name: "add_key",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				p7s6cache := F8NewS6CacheWithMemoryLimitForTest(i9cache, 16)
@@ -64,7 +64,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 		},
 		{
 			name: "add_delete_key",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				i9cache.m3data["key2"] = &s6Unit{value: "bbbb", deadline: time.Time{}}
@@ -83,7 +83,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 		},
 		{
 			name: "add_delete_2key",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				i9cache.m3data["key2"] = &s6Unit{value: "bbbb", deadline: time.Time{}}
@@ -119,7 +119,7 @@ func TestS6CacheWithMemoryLimitF8Set(p7s6t *testing.T) {
 func TestS6CacheWithMemoryLimitF8Delete(p7s6t *testing.T) {
 	s5s6case := []struct {
 		name          string
-		f8GetCache    func() *S6CacheWithMemoryLimit
+		f8GetCache    func() *S6MemoryLimitCache
 		key           string
 		wantNowMemory int64
 		wantS5LRU     []string
@@ -127,7 +127,7 @@ func TestS6CacheWithMemoryLimitF8Delete(p7s6t *testing.T) {
 	}{
 		{
 			name: "key_not_exist",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				p7s6cache := F8NewS6CacheWithMemoryLimitForTest(i9cache, 16)
 				return p7s6cache
@@ -139,7 +139,7 @@ func TestS6CacheWithMemoryLimitF8Delete(p7s6t *testing.T) {
 		},
 		{
 			name: "key_exist",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				p7s6cache := F8NewS6CacheWithMemoryLimitForTest(i9cache, 16)
@@ -154,7 +154,7 @@ func TestS6CacheWithMemoryLimitF8Delete(p7s6t *testing.T) {
 		},
 		{
 			name: "delete_key",
-			f8GetCache: func() *S6CacheWithMemoryLimit {
+			f8GetCache: func() *S6MemoryLimitCache {
 				i9cache := F8NewS6LocalForTest()
 				i9cache.m3data["key1"] = &s6Unit{value: "aaaa", deadline: time.Time{}}
 				i9cache.m3data["key2"] = &s6Unit{value: "bbbb", deadline: time.Time{}}
