@@ -17,7 +17,7 @@ type S6MemoryLimitCache struct {
 	MaxMemory int64
 	// lru 结构，先用切片意思一下，后面有时间再换合适的结构
 	s5LRU []string
-	// 锁，解决并发访问 lru 结构的问题
+	// 锁，解决并发操作 lru 结构的问题
 	// 这个锁感觉有的时候和本地缓存里面那个锁重复了，后面有时间再研究
 	p7s6lock *sync.Mutex
 }
